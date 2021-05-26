@@ -1,5 +1,10 @@
-x = X42Scope.new;
-x = X42StereoMeter.new;
-x = X42StereoPhase.new;
+(
+X42Scope.new;
+X42StereoMeter.new;
+X42StereoPhase.new;
+X42GonioMeter.new;
+X42PhaseWheel.new;
+Jaaa.new;
+Japa.new;
+)
 
-Ndef(\1, { Pan2.ar(PinkNoise.ar(), SinOsc.kr(1)) }).mold(2).play

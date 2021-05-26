@@ -1,0 +1,11 @@
+(
+  name: "linuxutils",
+  summary: "Assorted linux based utilities",
+  version: "0.001",
+  schelp: "linuxutils.schelp",
+  dependencies: nil,
+  license: "GNU GPL v3.0",
+  copyright: "madskjeldgaard",
+  ext_dependency: nil,
+  url: "https://github.com/madskjeldgaard/linuxutils-quark"
+)

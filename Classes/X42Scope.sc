@@ -1,30 +1,31 @@
-X42_Base { 
+JACKClient_Base { 
 	var maxClientInputs;
-	var clientBaseName;
+	var clientBaseName, processName;
 
 	*new{
 		^super.new.init()
 	}
 
 	init{
+		Server.local.doWhenBooted{
+			clientBaseName = this.getBaseName();
+			maxClientInputs = this.getMaxClientIns();
+			processName = this.getProcessName();
 
-		clientBaseName = this.getBaseName();
-		maxClientInputs = this.getMaxClientIns();
+			if(this.scopeIsRunning().not, { 
+				"% is not runnning, starting it now... ".format(processName).postln;
+				fork{
+					this.startProcess();
 
-		if(this.scopeIsRunning().not, { 
-			"% is not runnning, starting it now... ".format(clientBaseName).postln;
-			fork{
-				this.startProcess();
+					// @FIXME: This wait is not cool (but works)
+					1.wait;
 
-				// @FIXME: This wait is not cool (but works)
-				1.wait;
-
+					this.connect();
+				}
+			}, {
 				this.connect();
-			}
-		}, {
-			this.connect();
-		});
-
+			});
+		}
 	}
 
 	connect{
@@ -80,7 +81,7 @@ X42_Base {
 
 }
 
-X42Scope : X42_Base{
+X42Scope : JACKClient_Base{
 
 	getMaxClientIns{
 		^4
@@ -96,7 +97,7 @@ X42Scope : X42_Base{
 	
 }
 
-X42StereoMeter : X42_Base{
+X42StereoMeter : JACKClient_Base{
 
 	getMaxClientIns{
 		^2
@@ -112,7 +113,7 @@ X42StereoMeter : X42_Base{
 	
 }
 
-X42PhaseWheel : X42_Base{
+X42PhaseWheel : JACKClient_Base{
 
 	getMaxClientIns{
 		^2
@@ -128,7 +129,7 @@ X42PhaseWheel : X42_Base{
 	
 }
 
-X42StereoPhase : X42_Base{
+X42StereoPhase : JACKClient_Base{
 	getMaxClientIns{
 		^2
 	}	
@@ -154,7 +155,7 @@ X42StereoPhase : X42_Base{
 	}
 }
 
-X42GonioMeter : X42_Base{
+X42GonioMeter : JACKClient_Base{
 	getMaxClientIns{
 		^2
 	}	
@@ -177,5 +178,33 @@ X42GonioMeter : X42_Base{
 		command.unixCmd(action: { c.unhang });
 		c.hang;
 
+	}
+}
+
+Japa : JACKClient_Base{
+	getMaxClientIns{
+		^4
+	}	
+
+	getBaseName{
+		^"japa:in_"
+	}
+
+	getProcessName{
+		^"japa -J"
+	}
+}
+
+Jaaa : JACKClient_Base{
+	getMaxClientIns{
+		^8
+	}	
+
+	getBaseName{
+		^"jaaa:in_"
+	}
+
+	getProcessName{
+		^"jaaa -J"
 	}
 }

@@ -4,9 +4,19 @@
 
 Assorted linux based utilities
 
+### Dependencies
+
+- Linux
+- Jack
+- [X42 plugins](http://x42-plugins.com/x42/)
+
 #### Included
 
 Convenience functions for starting up and connecting to the excellent x42 meters and scopes:
+
+##### X42
+
+![x42 meters in action](x42.jpg)
 
 ```
 x = X42Scope.new;

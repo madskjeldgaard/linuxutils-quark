@@ -22,6 +22,9 @@ Convenience functions for starting up and connecting to the excellent x42 meters
 x = X42Scope.new;
 x = X42StereoMeter.new;
 x = X42StereoPhase.new;
+x = X42GonioMeter.new;
+x = X42PhaseWheel.new;
+
 
 Ndef(\1, { Pan2.ar(PinkNoise.ar(), SinOsc.kr(1)) }).mold(2).play
 ```

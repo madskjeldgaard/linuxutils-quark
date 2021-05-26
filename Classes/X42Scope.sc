@@ -112,6 +112,22 @@ X42StereoMeter : X42_Base{
 	
 }
 
+X42PhaseWheel : X42_Base{
+
+	getMaxClientIns{
+		^2
+	}	
+
+	getBaseName{
+		^"Phase/Frequency Wheel:in"
+	}
+
+	getProcessName{
+		^"x42-meter 14"
+	}
+	
+}
+
 X42StereoPhase : X42_Base{
 	getMaxClientIns{
 		^2
@@ -123,6 +139,32 @@ X42StereoPhase : X42_Base{
 
 	getProcessName{
 		^"x42-meter 12"
+	}
+
+	doConnection{|conNum|
+		var c = Condition.new;
+		var command;
+		var inSuffices = ["L", "R"];
+		"Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
+		command = "jack_connect SuperCollider:out_%  '%%'".format(conNum+1, clientBaseName, inSuffices[conNum]);
+
+		command.unixCmd(action: { c.unhang });
+		c.hang;
+
+	}
+}
+
+X42GonioMeter : X42_Base{
+	getMaxClientIns{
+		^2
+	}	
+
+	getBaseName{
+		^"Goniometer:in"
+	}
+
+	getProcessName{
+		^"x42-meter 13"
 	}
 
 	doConnection{|conNum|

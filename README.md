@@ -6,8 +6,8 @@ Assorted linux based utilities and convenience functions for launching and conne
 
 - Linux
 - Jack
-- [X42 plugins](http://x42-plugins.com/x42/)
-- [Jaaa and Japa](https://kokkinizita.linuxaudio.org/linuxaudio/)
+- [X42 plugins](http://x42-plugins.com/x42/) (optional)
+- [Jaaa and Japa](https://kokkinizita.linuxaudio.org/linuxaudio/) (optional)
 
 ### Install dependencies
 

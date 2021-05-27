@@ -1,12 +1,16 @@
 JACKClient_Base { 
 	var maxClientInputs;
-	var clientBaseName, processName;
+	var clientBaseName, <processName, hasStarted=false, <pid;
 
 	*new{
 		^super.new.init()
 	}
 
 	init{
+		this.afterInit();
+	}
+
+	afterInit{
 		Server.local.doWhenBooted{
 			clientBaseName = this.getBaseName();
 			maxClientInputs = this.getMaxClientIns();
@@ -15,10 +19,16 @@ JACKClient_Base {
 			if(this.scopeIsRunning().not, { 
 				"% is not runnning, starting it now... ".format(processName).postln;
 				fork{
+					var cond = Condition.new;
 					this.startProcess();
 
 					// @FIXME: This wait is not cool (but works)
+					// 2.wait;
+					// loop { if(this.pid.isNil.not, { cond.unhang },{ (0.1).wait }) };
+					
+					// cond.hang;
 					1.wait;
+					"Process started".postln;
 
 					this.connect();
 				}
@@ -62,9 +72,27 @@ JACKClient_Base {
 		).isNil.not
 	}
 
+
+	pidRunning{
+		if(pid.isNil, {
+			^false
+		}, { 
+			var result = "ps -p %".format(pid).postln.unixCmdGetStdOutLines;
+			^result[1].isNil.not
+		})
+	}
+
 	startProcess{
 		var processName = this.getProcessName();
-		"% </dev/null &>/dev/null &".format(processName).unixCmdGetStdOut();
+
+		pid = "% &".format(processName).unixCmd(action: { "Launched!!!".postln })
+
+		// if(this.pidRunning.not, {
+		// 	// Start process, background it and get the process id (pid) 
+		// 	// "% </dev/null &>/dev/null & $!".format(processName).unixCmdGetStdOut();
+		// 			}, {
+		// 	"% has already been launched...".format(processName).warn
+		// })
 	}
 
 	getProcessName{
@@ -79,6 +107,40 @@ JACKClient_Base {
 		"getMaxClientIns not implemented".error
 	}
 
+}
+
+CarlaSingleVST : JACKClient_Base{
+	var plugName, plugPrefix, plugPath, plugFormat;
+
+	*new{|pluginName, pluginPath, pluginFormat, pluginPrefix="SC_"|
+		^super.new.init(pluginName, pluginPath, pluginFormat, pluginPrefix).afterInit()
+	}
+
+	init{|pluginName, pluginPath, pluginFormat, pluginPrefix|
+
+		plugName = pluginName;
+		plugPrefix = pluginPrefix;
+		plugPath = pluginPath;
+		plugFormat = pluginFormat;
+
+		// this.afterInit();
+	}
+
+	getMaxClientIns{
+		^2
+	}	
+
+	getBaseName{
+		^this.getJackClientName ++ ":input_"
+	}
+
+	getJackClientName{
+		^plugPrefix ++ plugName
+	}
+
+	getProcessName{
+		^"CARLA_CLIENT_NAME=\"%\" carla-single % '%'".format(this.getJackClientName, plugFormat, plugPath)
+	}
 }
 
 X42Scope : JACKClient_Base{
@@ -209,17 +271,4 @@ Jaaa : JACKClient_Base{
 	}
 }
 
-// CarlaSingleVST : JACKClient_Base{
-// 	getMaxClientIns{
-// 		^8
-// 	}	
 
-// 	getBaseName{
-// 		^"jaaa:in_"
-// 	}
-
-// 	getProcessName{
-// 		^"jaaa -J"
-//  carla-single vst3 "~/.vst3/yabridge/FabFilter Pro-C 2.vst3" "TIS"
-// 	}
-// }

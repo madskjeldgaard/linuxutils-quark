@@ -1,0 +1,62 @@
+TITLE::LinuxUtils overview
+SUMMARY::List of plugins in the Notam plugin suite
+CATEGORIES::UGens
+RELATED::Classes/Server
+
+Assorted linux based utilities and convenience functions for launching and connecting to Jack stuff automatically without leaving SuperCollider.
+
+ 
+SECTION::Dependencies
+
+LIST::
+	## LINK::http://x42-plugins.com/x42/##x42-plugins::	
+	## LINK::https://kokkinizita.linuxaudio.org/linuxaudio/##Jaaa and Japa::	
+
+::
+
+ 
+SECTION:: Install dependencies
+
+These dependencies are all optional and dependent on which features you want to use. Most linux distros can probably install these using the built in package manager. Here are some examples:
+
+STRONG::Arch based distros::
+
+Using yay:
+
+CODE::"yay -S x42-meters jaaa japa".runInTerminal::
+
+Using Paru:
+
+CODE::"paru -S x42-meters jaaa japa".runInTerminal::
+
+SECTION:: Meters and scopes
+ 
+STRONG::Launch x42-scope:::
+
+CODE::X42Scope.new;::
+
+STRONG::Launch x42-stereo meter:::
+
+CODE::X42StereoMeter.new;::
+
+STRONG::Launch x42 stereo phase meter:::
+
+CODE::X42StereoPhase.new;::
+
+STRONG::Launch x42 goniometer:::
+
+CODE::X42GonioMeter.new;::
+
+STRONG::Launch x42 phase wheel meter:::
+
+CODE::X42PhaseWheel.new;::
+
+STRONG::Launch Jaaa meter:::
+
+CODE::Jaaa.new;::
+
+STRONG::Launch Japa meter:::
+
+CODE::Japa.new;::
+
+KEYWORD::Linux

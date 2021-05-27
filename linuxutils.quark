@@ -1,8 +1,8 @@
 (
-  name: "linuxutils",
+  name: "LinuxUtils",
   summary: "Assorted linux based utilities",
-  version: "0.002",
-  schelp: "linuxutils.schelp",
+  version: "0.003",
+  schelp: "LinuxUtils.schelp",
   dependencies: nil,
   license: "GNU GPL v3.0",
   copyright: "madskjeldgaard",

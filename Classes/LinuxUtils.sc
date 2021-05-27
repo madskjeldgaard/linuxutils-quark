@@ -208,3 +208,18 @@ Jaaa : JACKClient_Base{
 		^"jaaa -J"
 	}
 }
+
+// CarlaSingleVST : JACKClient_Base{
+// 	getMaxClientIns{
+// 		^8
+// 	}	
+
+// 	getBaseName{
+// 		^"jaaa:in_"
+// 	}
+
+// 	getProcessName{
+// 		^"jaaa -J"
+//  carla-single vst3 "~/.vst3/yabridge/FabFilter Pro-C 2.vst3" "TIS"
+// 	}
+// }

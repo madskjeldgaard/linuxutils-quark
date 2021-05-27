@@ -20,15 +20,24 @@ JACKClient_Base {
 				"% is not runnning, starting it now... ".format(processName).postln;
 				fork{
 					var cond = Condition.new;
+					var timer; 
+
 					this.startProcess();
 
-					// @FIXME: This wait is not cool (but works)
-					// 2.wait;
-					// loop { if(this.pid.isNil.not, { cond.unhang },{ (0.1).wait }) };
-					
-					// cond.hang;
-					1.wait;
-					"Process started".postln;
+					// Wait for plugin's jack client to start up
+					// Tak fredrik olofsson!
+					timer= Main.elapsedTime;
+					"Waiting for jack client to start".postln;
+					while({cond.test.not}, {
+						".".post;
+						cond.test= this.scopeIsRunning();
+						cond.signal;
+						if(cond.test.not, {
+							if(Main.elapsedTime-timer<7, {1.wait}, {"timeout".warn; cond.test= true})
+						});
+					});
+
+					cond.wait;
 
 					this.connect();
 				}
@@ -52,6 +61,25 @@ JACKClient_Base {
 			}
 		}
 	}
+
+// 	connectInserted{
+// 		var hardwareOuts = Server.local.options.numOutputBusChannels;
+// 		var numberConnections = if(hardwareOuts >= maxClientInputs, { 
+// 			maxClientInputs
+// 		}, {
+// 			hardwareOuts
+// 		});
+
+// 		fork{
+// 			numberConnections.do{|conNum|
+// 				this.doConnection(conNum)
+// 			}
+// 		}
+// 	}
+
+// 	disconnectSuperColliderOut{|outNum|
+// 		// "jack_disconnect "
+// 	}
 
 	doConnection{|conNum|
 		var c = Condition.new;
@@ -85,7 +113,7 @@ JACKClient_Base {
 	startProcess{
 		var processName = this.getProcessName();
 
-		pid = "% &".format(processName).unixCmd(action: { "Launched!!!".postln })
+		pid = "% &".format(processName).unixCmd();
 
 		// if(this.pidRunning.not, {
 		// 	// Start process, background it and get the process id (pid) 

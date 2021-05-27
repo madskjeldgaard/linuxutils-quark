@@ -9,12 +9,11 @@ Assorted linux based utilities and convenience functions for launching and conne
 SECTION::Dependencies
 
 LIST::
-	## LINK::http://x42-plugins.com/x42/##x42-plugins::	
-	## LINK::https://kokkinizita.linuxaudio.org/linuxaudio/##Jaaa and Japa::	
-
+	## LINK::http://x42-plugins.com/x42/##x42-plugins::	(optional)
+	## LINK::https://kokkinizita.linuxaudio.org/linuxaudio/##Jaaa and Japa::(optional)
+	## LINK::https://github.com/falkTX/Carla##Carla::(optional)
 ::
 
- 
 SECTION:: Install dependencies
 
 These dependencies are all optional and dependent on which features you want to use. Most linux distros can probably install these using the built in package manager. Here are some examples:
@@ -23,13 +22,20 @@ STRONG::Arch based distros::
 
 Using yay:
 
-CODE::"yay -S x42-meters jaaa japa".runInTerminal::
+CODE::"yay -S x42-meters jaaa japa carla".runInTerminal::
 
 Using Paru:
 
-CODE::"paru -S x42-meters jaaa japa".runInTerminal::
+CODE::"paru -S x42-meters jaaa japa carla".runInTerminal::
 
-SECTION:: Meters and scopes
+SECTION::Plugins
+
+STRONG::Launch single plugin instance using Carla (uses carla-single internally)::
+CODE::
+c = CarlaSingleVST.new("FabFilter Pro-C 222", "~/.vst3/yabridge/FabFilter Pro-C 2.vst3", "vst3")
+::
+
+SECTION::Meters and scopes
  
 STRONG::Launch x42-scope:::
 

@@ -1,6 +1,6 @@
 TITLE::LinuxUtils overview
-SUMMARY::List of plugins in the Notam plugin suite
-CATEGORIES::UGens
+SUMMARY::An overview of the Linux Utilities
+CATEGORIES::Utilities
 RELATED::Classes/Server
 
 Assorted linux based utilities and convenience functions for launching and connecting to Jack stuff automatically without leaving SuperCollider.

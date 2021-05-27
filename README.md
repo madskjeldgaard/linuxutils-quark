@@ -1,5 +1,7 @@
 # LinuxUtils
 
+![open up vst](carlasinglevst.gif)
+
 Assorted linux based utilities and convenience functions for launching and connecting to Jack stuff automatically without leaving SuperCollider.
 
 ### Dependencies

@@ -8,15 +8,11 @@ Assorted linux based utilities and convenience functions for launching and conne
 - Jack
 - [X42 plugins](http://x42-plugins.com/x42/) (optional)
 - [Jaaa and Japa](https://kokkinizita.linuxaudio.org/linuxaudio/) (optional)
+- [Carla](https://github.com/falkTX/Carla) (optional)
 
 ### Install dependencies
 
-#### Arch based distros
-
-Using a AUR helper:
-```
-yay -S x42-plugins jaaa japa
-```
+See helpfile `Overview/LinuxUtils` for more info.
 
 #### Included
 
@@ -37,6 +33,12 @@ Japa.new;
 )
 
 Ndef(\1, { Pan2.ar(PinkNoise.ar(), SinOsc.kr(1)) }).mold(2).play
+```
+
+Open and connect to a plugin as a jack client using carla:
+
+```
+c = CarlaSingleVST.new("FabFilter Pro-C 222", "~/.vst3/yabridge/FabFilter Pro-C 2.vst3", "vst3")
 ```
 
 ### Installation

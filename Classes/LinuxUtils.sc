@@ -1,6 +1,8 @@
-JACKClient_Base { 
+
+PluginServerClient_Base {
 	var maxClientInputs;
 	var clientBaseName, <processName, hasStarted=false, <pid;
+    var <>framework = 'pipewire';
 
 	*new{
 		^super.new.init()
@@ -16,6 +18,11 @@ JACKClient_Base {
 			maxClientInputs = this.getMaxClientIns();
 			processName = this.getProcessName();
 
+            framework.isNil.if {
+                "PluginServerClient_Base.framework needs to be set to 'pipewire' or 'jack'".warn;
+                ^nil
+            };
+
 			if(this.scopeIsRunning().not, { 
 				"% is not runnning, starting it now... ".format(processName).postln;
 				fork{
@@ -24,16 +31,16 @@ JACKClient_Base {
 
 					this.startProcess();
 
-					// Wait for plugin's jack client to start up
+					// Wait for plugin's conn client to start up
 					// Tak fredrik olofsson!
 					timer= Main.elapsedTime;
-					"Waiting for jack client to start".postln;
+					"Waiting for % client to start".postf(framework);
 					while({cond.test.not}, {
-						".".post;
 						cond.test= this.scopeIsRunning();
 						cond.signal;
 						if(cond.test.not, {
-							if(Main.elapsedTime-timer<7, {1.wait}, {"timeout".warn; cond.test= true})
+                            ".".post;
+							if(Main.elapsedTime-timer<7, {1.wait}, {"timeout - trying to connect".warn; cond.test= true})
 						});
 					});
 
@@ -77,29 +84,52 @@ JACKClient_Base {
 // 		}
 // 	}
 
-// 	disconnectSuperColliderOut{|outNum|
-// 		// "jack_disconnect "
-// 	}
-
-	doConnection{|conNum|
+    // here we could look into using pw-link -d [link_id] -> maybe storing them in a dictionary, if one woudl want to have several instances of some util going..
+	disconnectSuperColliderOut{|outNum|
 		var c = Condition.new;
-		var command;
-		"Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
-		conNum = conNum + 1;
-		command = "jack_connect SuperCollider:out_%  '%%'".format(conNum, clientBaseName, conNum);
+		var command, plSrv;
+		"Disconnecting SuperCollider output num %".format(outNum).postln;
+		outNum = outNum + 1;
+
+        plSrv = case
+        { framework.asSymbol == \pipewire } { "pw-link -d" }
+        { framework.asSymbol == \jack } { "jack_disconnect" }
+        { "wrong framework specified".warn; ^nil };
+
+		command = "% SuperCollider:out_%  '%%'".format(plSrv, outNum, clientBaseName, outNum);
 
 		command.unixCmd(action: { c.unhang });
 		c.hang;
+	}
 
+	doConnection{|conNum|
+		var c = Condition.new;
+		var command, plSrv;
+		"Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
+		conNum = conNum + 1;
+
+        plSrv = case
+        { framework.asSymbol == \pipewire } { "pw-link" }
+        { framework.asSymbol == \jack } { "jack_connect" }
+        { "wrong framework specified".warn; ^nil };
+
+		command = "% SuperCollider:out_%  '%%'".format(plSrv, conNum, clientBaseName, conNum);
+
+		command.unixCmd(action: { c.unhang });
+		c.hang;
 	}
 
 	scopeIsRunning{
-		var conns = "jack_lsp".unixCmdGetStdOutLines;
+		var conns;
+        var plSrv = case
+        { framework.asSymbol == \pipewire } { "pw-link -l" }
+        { framework.asSymbol == \jack } { "jack_lsp" }
+        { "wrong framework specified".warn; ^nil };
+        conns = plSrv.unixCmdGetStdOutLines;
 		^conns.indexOfEqual(
 			"%1".format(clientBaseName)
 		).isNil.not
 	}
-
 
 	pidRunning{
 		if(pid.isNil, {
@@ -137,7 +167,7 @@ JACKClient_Base {
 
 }
 
-CarlaSingleVST : JACKClient_Base{
+CarlaSingleVST : PluginServerClient_Base{
 	var plugName, plugPrefix, plugPath, plugFormat;
 
 	*new{|pluginName, pluginPath, pluginFormat, pluginPrefix="SC_"|
@@ -159,19 +189,19 @@ CarlaSingleVST : JACKClient_Base{
 	}	
 
 	getBaseName{
-		^this.getJackClientName ++ ":input_"
+		^this.getClientName ++ ":input_"
 	}
 
-	getJackClientName{
+	getClientName{
 		^plugPrefix ++ plugName
 	}
 
 	getProcessName{
-		^"CARLA_CLIENT_NAME=\"%\" carla-single % '%'".format(this.getJackClientName, plugFormat, plugPath)
+		^"CARLA_CLIENT_NAME=\"%\" carla-single % '%'".format(this.getClientName, plugFormat, plugPath)
 	}
 }
 
-X42Scope : JACKClient_Base{
+X42Scope : PluginServerClient_Base{
 
 	getMaxClientIns{
 		^4
@@ -187,7 +217,7 @@ X42Scope : JACKClient_Base{
 	
 }
 
-X42StereoMeter : JACKClient_Base{
+X42StereoMeter : PluginServerClient_Base{
 
 	getMaxClientIns{
 		^2
@@ -203,7 +233,7 @@ X42StereoMeter : JACKClient_Base{
 	
 }
 
-X42PhaseWheel : JACKClient_Base{
+X42PhaseWheel : PluginServerClient_Base{
 
 	getMaxClientIns{
 		^2
@@ -219,7 +249,7 @@ X42PhaseWheel : JACKClient_Base{
 	
 }
 
-X42StereoPhase : JACKClient_Base{
+X42StereoPhase : PluginServerClient_Base{
 	getMaxClientIns{
 		^2
 	}	
@@ -234,10 +264,14 @@ X42StereoPhase : JACKClient_Base{
 
 	doConnection{|conNum|
 		var c = Condition.new;
-		var command;
+		var command, plSrv;
 		var inSuffices = ["L", "R"];
+        plSrv = case
+        { framework.asSymbol == \pipewire } { "pw-link" }
+        { framework.asSymbol == \jack } { "jack_connect" }
+        { "wrong framework specified".warn; ^nil };
 		"Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
-		command = "jack_connect SuperCollider:out_%  '%%'".format(conNum+1, clientBaseName, inSuffices[conNum]);
+		command = "% SuperCollider:out_%  '%%'".format(plSrv, conNum+1, clientBaseName, inSuffices[conNum]);
 
 		command.unixCmd(action: { c.unhang });
 		c.hang;
@@ -245,7 +279,7 @@ X42StereoPhase : JACKClient_Base{
 	}
 }
 
-X42GonioMeter : JACKClient_Base{
+X42GonioMeter : PluginServerClient_Base{
 	getMaxClientIns{
 		^2
 	}	
@@ -260,10 +294,14 @@ X42GonioMeter : JACKClient_Base{
 
 	doConnection{|conNum|
 		var c = Condition.new;
-		var command;
+		var command, plSrv;
 		var inSuffices = ["L", "R"];
+        plSrv = case
+        { framework.asSymbol == \pipewire } { "pw-link" }
+        { framework.asSymbol == \jack } { "jack_connect" }
+        { "wrong framework specified".warn; ^nil };
 		"Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
-		command = "jack_connect SuperCollider:out_%  '%%'".format(conNum+1, clientBaseName, inSuffices[conNum]);
+		command = "% SuperCollider:out_%  '%%'".format(plSrv, conNum+1, clientBaseName, inSuffices[conNum]);
 
 		command.unixCmd(action: { c.unhang });
 		c.hang;
@@ -271,7 +309,7 @@ X42GonioMeter : JACKClient_Base{
 	}
 }
 
-Japa : JACKClient_Base{
+Japa : PluginServerClient_Base{
 	getMaxClientIns{
 		^4
 	}	
@@ -285,7 +323,7 @@ Japa : JACKClient_Base{
 	}
 }
 
-Jaaa : JACKClient_Base{
+Jaaa : PluginServerClient_Base{
 	getMaxClientIns{
 		^8
 	}	

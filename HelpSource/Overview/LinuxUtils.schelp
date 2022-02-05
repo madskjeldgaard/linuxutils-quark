@@ -3,7 +3,7 @@ SUMMARY::An overview of the Linux Utilities
 CATEGORIES::Utilities
 RELATED::Classes/Server
 
-Assorted linux based utilities and convenience functions for launching and connecting to Jack stuff automatically without leaving SuperCollider.
+Assorted linux based utilities and convenience functions for launching and connecting to PipeWire/Jack stuff automatically without leaving SuperCollider.
 
  
 SECTION::Dependencies
@@ -64,5 +64,13 @@ CODE::Jaaa.new;::
 STRONG::Launch Japa meter:::
 
 CODE::Japa.new;::
+
+STRONG::Set which framework/connection-kit to use:::
+
+CODE::
+Japa.new.framework_(\jack);
+X42Scope.new.framework_("pipewire");
+// note that pipewire is default
+::
 
 KEYWORD::Linux

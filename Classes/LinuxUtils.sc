@@ -369,3 +369,46 @@ Jaaa : LinuxUtils {
         ^"jaaa -J"
     }
 }
+
+Yass : LinuxUtils {
+    classvar yassChanCount, yassColor;
+    *new {|numChans, color|
+        yassChanCount=numChans;
+        yassColor=color;
+        (framework.asSymbol==\pipewire).if{"please ignore the alsa_ connection attempts ...".postln};
+        yassColor.isInteger.not.if{"Yass scrolling color is set with integers [0-?]"};
+        ^super.new.init()
+    }
+
+    getMaxClientIns {
+        ^32
+    }	
+
+    getBaseName {
+        ^"yass:in_"
+    }
+
+    connect {
+        var neededHardwareOuts = yassChanCount;
+        var numConnections = if(neededHardwareOuts >= maxClientInputs, { 
+            maxClientInputs
+        }, {
+            neededHardwareOuts
+        });
+
+        fork{
+            numConnections.do{|conNum|
+                this.doConnection(conNum)
+            }
+        }
+    }
+
+    getProcessName {
+        var server = server ? Server.default;
+        yassChanCount.isNil.if{
+            yassChanCount=server.options.numOutputBusChannels;
+            if(yassChanCount>this.getMaxClientIns) {yassChanCount=this.getMaxClientIns};
+        };
+        ^"yass -n % -c %".format(yassChanCount, yassColor)
+    }
+}

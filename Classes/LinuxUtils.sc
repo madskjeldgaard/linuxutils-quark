@@ -18,10 +18,6 @@ LinuxUtils {
     }
 
     init {
-        this.afterInit();
-    }
-
-    afterInit {
         Server.local.doWhenBooted{
             clientBaseName = this.getBaseName();
             maxClientInputs = this.getMaxClientIns();
@@ -179,7 +175,7 @@ CarlaSingleVST : LinuxUtils {
     var plugName, plugPrefix, plugPath, plugFormat;
 
     *new{|pluginName, pluginPath, pluginFormat, pluginPrefix="SC_"|
-        ^super.new.init(pluginName, pluginPath, pluginFormat, pluginPrefix).afterInit()
+        ^super.new.init(pluginName, pluginPath, pluginFormat, pluginPrefix).init()
     }
 
     init{|pluginName, pluginPath, pluginFormat, pluginPrefix|
@@ -189,7 +185,7 @@ CarlaSingleVST : LinuxUtils {
         plugPath = pluginPath;
         plugFormat = pluginFormat;
 
-        // this.afterInit();
+        // this.init();
     }
 
     getMaxClientIns {

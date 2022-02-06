@@ -5,10 +5,6 @@ LinuxUtils {
     var maxClientInputs;
     var clientBaseName, <processName, hasStarted=false, <pid;
 
-    *new {
-        ^super.new.init()
-    }
-
     *initClass {
         plugins = Dictionary.new();
         plugins.add(\CarlaSingleVST -> "Use Carla to load Single VST's");
@@ -215,6 +211,10 @@ CarlaSingleVST : LinuxUtils {
 
 X42Scope : LinuxUtils {
 
+    *new {
+        ^super.new.init()
+    }
+
     getMaxClientIns {
         ^4
     }
@@ -229,6 +229,10 @@ X42Scope : LinuxUtils {
 }
 
 X42StereoMeter : LinuxUtils {
+
+    *new {
+        ^super.new.init()
+    }
 
     getMaxClientIns {
         ^2
@@ -246,6 +250,10 @@ X42StereoMeter : LinuxUtils {
 
 X42PhaseWheel : LinuxUtils {
 
+    *new {
+        ^super.new.init()
+    }
+
     getMaxClientIns {
         ^2
     }	
@@ -261,6 +269,11 @@ X42PhaseWheel : LinuxUtils {
 }
 
 X42StereoPhase : LinuxUtils {
+
+    *new {
+        ^super.new.init()
+    }
+
     getMaxClientIns {
         ^2
     }	
@@ -290,6 +303,11 @@ X42StereoPhase : LinuxUtils {
 }
 
 X42GonioMeter : LinuxUtils {
+
+    *new {
+        ^super.new.init()
+    }
+
     getMaxClientIns {
         ^2
     }	
@@ -319,6 +337,11 @@ X42GonioMeter : LinuxUtils {
 }
 
 Japa : LinuxUtils {
+
+    *new {
+        ^super.new.init()
+    }
+
     getMaxClientIns {
         ^4
     }	
@@ -333,6 +356,11 @@ Japa : LinuxUtils {
 }
 
 Jaaa : LinuxUtils {
+
+    *new {
+        ^super.new.init()
+    }
+
     getMaxClientIns {
         ^8
     }	

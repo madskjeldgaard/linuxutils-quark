@@ -1,51 +1,64 @@
-
-PluginServerClient_Base {
+LinuxUtils {
+    classvar <>framework = 'pipewire';
+    classvar <>pluginTimeout = 5; // in reconds
+    classvar <plugins;
     var maxClientInputs;
     var clientBaseName, <processName, hasStarted=false, <pid;
-    var <>framework = 'pipewire';
 
-    *new{
+    *new {
         ^super.new.init()
     }
 
-    init{
+    *initClass {
+        plugins = Dictionary.new();
+        plugins.add(\CarlaSingleVST -> "Use Carla to load Single VST's");
+        plugins.add(\X42Scope -> "An audio oscilloscope with variable time scale");
+        plugins.add(\X42StereoMeter -> "A Stereo Meter");
+        plugins.add(\X42PhaseWheel -> "A Wheel Phase Meter");
+        plugins.add(\X42StereoPhase -> "A Phase Meter");
+        plugins.add(\X42GonioMeter -> "A Stereo Phase Scope");
+        plugins.add(\Japa -> "A 'perceptual' or 'psychoacoustic' audio spectrum analyser");
+        plugins.add(\Jaaa -> "An audio signal generator and spectrum analyser designed to make accurate measurements");
+    }
+
+    init {
         this.afterInit();
     }
 
-    afterInit{
+    afterInit {
         Server.local.doWhenBooted{
             clientBaseName = this.getBaseName();
             maxClientInputs = this.getMaxClientIns();
             processName = this.getProcessName();
 
             framework.isNil.if {
-                "PluginServerClient_Base.framework needs to be set to 'pipewire' or 'jack'".warn;
+                "LinuxUtils.framework needs to be set to 'pipewire' or 'jack'".warn;
                 ^nil
             };
 
-            if(this.scopeIsRunning().not, { 
-                "% is not runnning, starting it now... ".format(processName).postln;
+            if(this.neededInputExists().not, { 
+                "% is not runnning, starting it now...\n".postf(processName);
                 fork{
                     var cond = Condition.new;
                     var timer; 
 
                     this.startProcess();
 
-                    // Wait for plugin's conn client to start up
-                    // Tak fredrik olofsson!
                     timer= Main.elapsedTime;
-                    "Waiting for % client to start".postf(framework);
+                    "Waiting for % client to start\n".postf(framework);
                     while({cond.test.not}, {
-                        cond.test= this.scopeIsRunning();
-                        cond.signal;
+                        cond.test = this.neededInputExists();
                         if(cond.test.not, {
                             ".".post;
-                            if(Main.elapsedTime-timer<7, {1.wait}, {"timeout - trying to connect".warn; cond.test= true})
+                            if(Main.elapsedTime-timer<pluginTimeout)
+                            {0.5.wait}
+                            {"timeout - trying to connect".warn; cond.test= true}
                         });
+                        cond.signal;
                     });
 
                     cond.wait;
-
+                    "\n".post;
                     this.connect();
                 }
             }, {
@@ -54,7 +67,7 @@ PluginServerClient_Base {
         }
     }
 
-    connect{
+    connect {
         var hardwareOuts = Server.local.options.numOutputBusChannels;
         var numberConnections = if(hardwareOuts >= maxClientInputs, { 
             maxClientInputs
@@ -84,17 +97,18 @@ PluginServerClient_Base {
     // 		}
     // 	}
 
-    // here we could look into using pw-link -d [link_id] -> maybe storing them in a dictionary, if one woudl want to have several instances of some util going..
-    disconnectSuperColliderOut{|outNum|
+    // here we could look into using pw-link -d [link_id] -> maybe storing them in a Dictionary
+    // if one would want to have several instances of some util going..
+    disconnectSuperColliderOut {|outNum|
         var c = Condition.new;
         var command, plSrv;
-        "Disconnecting SuperCollider output num %".format(outNum).postln;
+        "Disconnecting SuperCollider output num %\n".postf(outNum);
         outNum = outNum + 1;
 
         plSrv = case
         { framework.asSymbol == \pipewire } { "pw-link -d" }
         { framework.asSymbol == \jack } { "jack_disconnect" }
-        { "wrong framework specified".warn; ^nil };
+        { "LinuxUtils: wrong framework specified".warn; ^nil };
 
         command = "% SuperCollider:out_%  '%%'".format(plSrv, outNum, clientBaseName, outNum);
 
@@ -102,16 +116,16 @@ PluginServerClient_Base {
         c.hang;
     }
 
-    doConnection{|conNum|
+    doConnection {|conNum|
         var c = Condition.new;
         var command, plSrv;
-        "Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
+        "Connecting SuperCollider output num % to % input\n".postf(conNum, clientBaseName);
         conNum = conNum + 1;
 
         plSrv = case
         { framework.asSymbol == \pipewire } { "pw-link" }
         { framework.asSymbol == \jack } { "jack_connect" }
-        { "wrong framework specified".warn; ^nil };
+        { "LinuxUtils: wrong framework specified".warn; ^nil };
 
         command = "% SuperCollider:out_%  '%%'".format(plSrv, conNum, clientBaseName, conNum);
 
@@ -119,19 +133,18 @@ PluginServerClient_Base {
         c.hang;
     }
 
-    scopeIsRunning{
-        var conns;
-        var plSrv = case
-        { framework.asSymbol == \pipewire } { "pw-link -l" }
-        { framework.asSymbol == \jack } { "jack_lsp" }
-        { "wrong framework specified".warn; ^nil };
+    neededInputExists {
+        var conns, plSrv = case
+        { framework.asSymbol == \pipewire } {"pw-link -i"}
+        { framework.asSymbol == \jack } {"jack_lsp"}
+        { "LinuxUtils: wrong framework specified".warn; ^nil };
         conns = plSrv.unixCmdGetStdOutLines;
         ^conns.indexOfEqual(
             "%1".format(clientBaseName)
         ).isNil.not
     }
 
-    pidRunning{
+    pidRunning {
         if(pid.isNil, {
             ^false
         }, { 
@@ -140,7 +153,7 @@ PluginServerClient_Base {
         })
     }
 
-    startProcess{
+    startProcess {
         var processName = this.getProcessName();
 
         pid = "% &".format(processName).unixCmd();
@@ -153,21 +166,20 @@ PluginServerClient_Base {
         // })
     }
 
-    getProcessName{
+    getProcessName {
         "getProcessName not implemented".error
     }
 
-    getBaseName{
+    getBaseName {
         "getBaseName not implemented".error
     }
 
-    getMaxClientIns{
+    getMaxClientIns {
         "getMaxClientIns not implemented".error
     }
-
 }
 
-CarlaSingleVST : PluginServerClient_Base{
+CarlaSingleVST : LinuxUtils {
     var plugName, plugPrefix, plugPath, plugFormat;
 
     *new{|pluginName, pluginPath, pluginFormat, pluginPrefix="SC_"|
@@ -184,157 +196,152 @@ CarlaSingleVST : PluginServerClient_Base{
         // this.afterInit();
     }
 
-    getMaxClientIns{
+    getMaxClientIns {
         ^2
     }	
 
-    getBaseName{
+    getBaseName {
         ^this.getClientName ++ ":input_"
     }
 
-    getClientName{
+    getClientName {
         ^plugPrefix ++ plugName
     }
 
-    getProcessName{
+    getProcessName {
         ^"CARLA_CLIENT_NAME=\"%\" carla-single % '%'".format(this.getClientName, plugFormat, plugPath)
     }
 }
 
-X42Scope : PluginServerClient_Base{
+X42Scope : LinuxUtils {
 
-    getMaxClientIns{
+    getMaxClientIns {
         ^4
     }
 
-    getBaseName{
+    getBaseName {
         ^"Simple Scope (4 channel):in"
     }
 
-    getProcessName{
+    getProcessName {
         ^"x42-scope"
     }
-
 }
 
-X42StereoMeter : PluginServerClient_Base{
+X42StereoMeter : LinuxUtils {
 
-    getMaxClientIns{
+    getMaxClientIns {
         ^2
     }	
 
-    getBaseName{
+    getBaseName {
         ^"Stereo/Frequency Scope:in"
     }
 
-    getProcessName{
+    getProcessName {
         ^"x42-meter 16"
     }
 
 }
 
-X42PhaseWheel : PluginServerClient_Base{
+X42PhaseWheel : LinuxUtils {
 
-    getMaxClientIns{
+    getMaxClientIns {
         ^2
     }	
 
-    getBaseName{
+    getBaseName {
         ^"Phase/Frequency Wheel:in"
     }
 
-    getProcessName{
+    getProcessName {
         ^"x42-meter 14"
     }
 
 }
 
-X42StereoPhase : PluginServerClient_Base{
-    getMaxClientIns{
+X42StereoPhase : LinuxUtils {
+    getMaxClientIns {
         ^2
     }	
 
-    getBaseName{
+    getBaseName {
         ^"Stereo Phase-Correlation Meter:in"
     }
 
-    getProcessName{
+    getProcessName {
         ^"x42-meter 12"
     }
 
-    doConnection{|conNum|
+    doConnection {|conNum|
         var c = Condition.new;
         var command, plSrv;
         var inSuffices = ["L", "R"];
         plSrv = case
         { framework.asSymbol == \pipewire } { "pw-link" }
         { framework.asSymbol == \jack } { "jack_connect" }
-        { "wrong framework specified".warn; ^nil };
+        { "LinuxUtils: wrong framework specified".warn; ^nil };
         "Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
         command = "% SuperCollider:out_%  '%%'".format(plSrv, conNum+1, clientBaseName, inSuffices[conNum]);
 
         command.unixCmd(action: { c.unhang });
         c.hang;
-
     }
 }
 
-X42GonioMeter : PluginServerClient_Base{
-    getMaxClientIns{
+X42GonioMeter : LinuxUtils {
+    getMaxClientIns {
         ^2
     }	
 
-    getBaseName{
+    getBaseName {
         ^"Goniometer:in"
     }
 
-    getProcessName{
+    getProcessName {
         ^"x42-meter 13"
     }
 
-    doConnection{|conNum|
+    doConnection {|conNum|
         var c = Condition.new;
         var command, plSrv;
         var inSuffices = ["L", "R"];
         plSrv = case
         { framework.asSymbol == \pipewire } { "pw-link" }
         { framework.asSymbol == \jack } { "jack_connect" }
-        { "wrong framework specified".warn; ^nil };
+        { "LinuxUtils: wrong framework specified".warn; ^nil };
         "Connecting SuperCollider output num % to % input".format(conNum, clientBaseName).postln;
         command = "% SuperCollider:out_%  '%%'".format(plSrv, conNum+1, clientBaseName, inSuffices[conNum]);
 
         command.unixCmd(action: { c.unhang });
         c.hang;
-
     }
 }
 
-Japa : PluginServerClient_Base{
-    getMaxClientIns{
+Japa : LinuxUtils {
+    getMaxClientIns {
         ^4
     }	
 
-    getBaseName{
+    getBaseName {
         ^"japa:in_"
     }
 
-    getProcessName{
+    getProcessName {
         ^"japa -J"
     }
 }
 
-Jaaa : PluginServerClient_Base{
-    getMaxClientIns{
+Jaaa : LinuxUtils {
+    getMaxClientIns {
         ^8
     }	
 
-    getBaseName{
+    getBaseName {
         ^"jaaa:in_"
     }
 
-    getProcessName{
+    getProcessName {
         ^"jaaa -J"
     }
 }
-
-

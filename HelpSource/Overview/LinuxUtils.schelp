@@ -3,7 +3,7 @@ SUMMARY::An overview of the Linux Utilities
 CATEGORIES::Utilities
 RELATED::Classes/Server
 
-Assorted linux based utilities and convenience functions for launching and connecting to Jack stuff automatically without leaving SuperCollider.
+Assorted linux based utilities and convenience functions for launching and connecting to PipeWire/Jack stuff automatically without leaving SuperCollider.
 
  
 SECTION::Dependencies
@@ -20,15 +20,15 @@ These dependencies are all optional and dependent on which features you want to 
 
 STRONG::Arch based distros::
 
+Using paru:
+
+CODE::"paru -S x42-meters jaaa japa carla".runInTerminal::
+
 Using yay:
 
 CODE::"yay -S x42-meters jaaa japa carla".runInTerminal::
 
-Using Paru:
-
-CODE::"paru -S x42-meters jaaa japa carla".runInTerminal::
-
-SECTION::Plugins
+SECTION::Multiple plugin support
 
 STRONG::Launch single plugin instance using Carla (uses carla-single internally)::
 CODE::
@@ -64,5 +64,27 @@ CODE::Jaaa.new;::
 STRONG::Launch Japa meter:::
 
 CODE::Japa.new;::
+
+SECTION::Classvars
+
+STRONG::Set which framework/connection-kit to use:::
+
+CODE::
+LinuxUtils.framework_(\jack);
+// note that pipewire is default
+::
+
+STRONG::Set client startup timeout in seconds:::
+
+CODE::
+LinuxUtils.pluginTimeout(10);
+// note that default is 5
+::
+
+STRONG::Get a dictionary of all plugins (effects,meters,scopes):::
+
+CODE::
+LinuxUtils.plugins;
+::
 
 KEYWORD::Linux
